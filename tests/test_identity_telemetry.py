@@ -3,7 +3,7 @@ from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
 from riskmesh.api import app
-from riskmesh.identity import Principal, authorize, verify_token
+from riskmesh.identity import verify_token
 from riskmesh.telemetry import metrics_response, record
 
 
