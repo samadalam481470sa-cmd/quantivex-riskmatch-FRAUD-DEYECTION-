@@ -5,28 +5,58 @@ import os
 import secrets
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, Header, HTTPException, Query
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from riskmesh.attestation import sign_decision, verify_decision
 from riskmesh.engine import batch_summary, exposure_score, score_transaction
+from riskmesh.identity import authorize
 from riskmesh.learning import extract_features, load_signed_model
 from riskmesh.models import Transaction
 from riskmesh.security import production_mode, tenant_scope, validate_runtime
 from riskmesh.store import decisions, history, save
+from riskmesh.telemetry import metrics_response, record
 from riskmesh.temporal import combine_risk, investigate
 
 validate_runtime()
 app = FastAPI(title="Quantivex RiskMesh", version="0.2.0", docs_url=None if production_mode() else "/docs", redoc_url=None)
 
 
-def require_key(x_api_key: str | None = Header(default=None)) -> None:
+def require_key(request: Request, x_api_key: str | None = Header(default=None)) -> None:
+    if production_mode():
+        authorize(request, "analyst")
+        return
     required = os.getenv("RISK_MESH_API_KEY")
     if not required or len(required) < 24:
         raise HTTPException(status_code=503, detail="Risk API key is not configured")
     if not secrets.compare_digest(required, x_api_key or ""):
         raise HTTPException(status_code=401, detail="Invalid API key")
+
+
+@app.middleware("http")
+async def security_middleware(request: Request, call_next):
+    if production_mode() and request.url.path.startswith("/api/"):
+        if int(request.headers.get("content-length", "0") or "0") > 1_048_576:
+            from fastapi.responses import JSONResponse
+            return JSONResponse({"detail": "Request too large"}, status_code=413)
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["Content-Security-Policy"] = "default-src 'self'; object-src 'none'; frame-ancestors 'none'"
+    record(request.url.path, response.status_code)
+    return response
+
+
+@app.get("/internal/metrics", include_in_schema=False)
+def internal_metrics(request: Request):
+    if production_mode():
+        authorize(request, "admin")
+    else:
+        require_key(request, request.headers.get("X-API-Key"))
+    return metrics_response()
 
 
 class BatchRequest(BaseModel):
@@ -93,6 +123,7 @@ class VerifyRequest(BaseModel):
 @app.post("/api/v1/advanced/investigate", dependencies=[Depends(require_key)])
 def advanced_investigate(transaction: Transaction):
     """Run temporal motifs and return a cryptographically attested risk explanation."""
+    tenant_scope(transaction.tenant_id)
     prior = history(transaction.tenant_id)
     baseline = score_transaction(transaction, prior)
     motifs = investigate(transaction, prior)
