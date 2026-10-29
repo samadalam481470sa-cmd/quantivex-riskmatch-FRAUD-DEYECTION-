@@ -94,5 +94,7 @@ def validate_runtime() -> None:
         raise RuntimeError("Restricted mode requires a 32+ character API key and fixed tenant")
     if os.getenv("RISK_MESH_DB_PATH", "/tmp/riskmesh.db").startswith("/tmp/"):
         raise RuntimeError("Restricted mode requires persistent storage outside /tmp")
+    if not all(os.getenv(name, "").startswith("https://") for name in ("RISK_MESH_OIDC_ISSUER", "RISK_MESH_OIDC_JWKS_URL")) or not os.getenv("RISK_MESH_OIDC_AUDIENCE"):
+        raise RuntimeError("Restricted mode requires OIDC issuer, JWKS URL and audience")
     if os.getenv("RISK_MESH_ENABLE_DEMO", "false").lower() == "true":
         raise RuntimeError("Restricted mode cannot expose the demo dashboard")
