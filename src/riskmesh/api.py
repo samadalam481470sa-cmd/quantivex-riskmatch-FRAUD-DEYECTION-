@@ -25,6 +25,8 @@ app = FastAPI(title="Quantivex RiskMesh", version="0.2.0", docs_url=None if prod
 
 
 def require_key(request: Request, x_api_key: str | None = Header(default=None)) -> None:
+    if os.getenv("RISK_MESH_PUBLIC_DEMO", "").lower() == "true":
+        raise HTTPException(status_code=404, detail="Not found")
     if production_mode():
         authorize(request, "analyst")
         return
