@@ -36,7 +36,13 @@ jobs:
                   with urlopen("http://127.0.0.1:8000/health", timeout=3) as response:
                       assert json.load(response)["status"] == "ok"
                   with urlopen("http://127.0.0.1:8000/", timeout=3) as response:
-                      assert "Fintech Fraud Intelligence" in response.read().decode()
+                      assert "Fraud Intelligence" in response.read().decode()
+                  with urlopen("http://127.0.0.1:8000/api/v1/demo/investigate/circular-ring", timeout=3) as response:
+                      case = json.load(response)
+                      assert case["decision"] == "block"
+                      assert case["data_source"] == "fixed-synthetic-only"
+                  with urlopen("http://127.0.0.1:8000/assets/dashboard.js", timeout=3) as response:
+                      assert "Run investigation" in response.read().decode()
                   break
               except Exception:
                   time.sleep(2)
