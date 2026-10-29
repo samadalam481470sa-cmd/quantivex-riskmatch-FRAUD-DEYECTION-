@@ -1,0 +1,17 @@
+groups:
+  - name: riskmesh-api
+    rules:
+      - alert: RiskMeshHighServerErrorRate
+        expr: sum(rate(riskmesh_http_requests_total{status_class="5xx"}[5m])) / clamp_min(sum(rate(riskmesh_http_requests_total[5m])), 0.001) > 0.05
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "RiskMesh HTTP 5xx fraction exceeds 5%"
+      - alert: RiskMeshMetricsAbsent
+        expr: absent(riskmesh_http_requests_total)
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "RiskMesh metrics are missing (check protected scrape authentication)"
