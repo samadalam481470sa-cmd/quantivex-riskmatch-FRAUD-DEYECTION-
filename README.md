@@ -11,6 +11,14 @@ The project is designed to demonstrate fintech engineering, fraud analytics, gra
 
 ![Quantivex RiskMesh architecture](docs/images/riskmesh-architecture.svg)
 
+## Advanced security and graph intelligence
+
+The advanced engine combines **time-respecting graph traversal** with detection of circular funding, aggregation/layering and rapid dispersal. It applies nonlinear risk fusion to reduce naive double-counting of correlated signals. Every advanced investigation returns a **canonical HMAC-SHA256 signed decision envelope** that can be independently verified against tampering.
+
+These are implemented algorithms—not a claimed proprietary breakthrough or a trained ML model. The signed envelopes prove integrity only to parties with the shared signing key; they are not nonrepudiable public-key signatures. For production use, migrate to KMS-managed asymmetric signatures and signed tenant identities.
+
+**Advanced API:** `POST /api/v1/advanced/investigate` and `POST /api/v1/advanced/verify`. Set `RISK_MESH_SIGNING_KEY` to a separate random secret of at least 32 characters. All advanced endpoints require the existing API key.
+
 ## Implemented capabilities
 - Behavioral amount-outlier detection using account-specific historical baselines.
 - Ten-minute transaction-velocity analysis.
