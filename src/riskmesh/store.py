@@ -7,6 +7,8 @@ import sqlite3
 from contextlib import contextmanager
 from pathlib import Path
 
+from fastapi import HTTPException
+
 from riskmesh.models import RiskResult, Transaction
 
 
@@ -46,8 +48,16 @@ def connection():
 
 def save(transaction: Transaction, result: RiskResult) -> None:
     with connection() as db:
+        existing = db.execute(
+            "SELECT body FROM transactions WHERE tenant=? AND transaction_id=?",
+            (transaction.tenant_id, transaction.transaction_id),
+        ).fetchone()
+        if existing is not None:
+            if existing["body"] != transaction.model_dump_json():
+                raise HTTPException(status_code=409, detail="Transaction ID already used for different data")
+            return
         db.execute(
-            "INSERT OR REPLACE INTO transactions VALUES (?,?,?,?)",
+            "INSERT INTO transactions VALUES (?,?,?,?)",
             (
                 transaction.tenant_id,
                 transaction.transaction_id,
@@ -56,7 +66,7 @@ def save(transaction: Transaction, result: RiskResult) -> None:
             ),
         )
         db.execute(
-            "INSERT OR REPLACE INTO risk_decisions VALUES (?,?,?,?,?)",
+            "INSERT INTO risk_decisions VALUES (?,?,?,?,?)",
             (
                 transaction.tenant_id,
                 transaction.transaction_id,
