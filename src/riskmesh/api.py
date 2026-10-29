@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 
 from riskmesh.attestation import sign_decision, verify_decision
 from riskmesh.engine import batch_summary, exposure_score, score_transaction
+from riskmesh.learning import extract_features, load_signed_model
 from riskmesh.models import Transaction
 from riskmesh.store import decisions, history, save
 from riskmesh.temporal import combine_risk, investigate
@@ -111,3 +112,25 @@ def advanced_investigate(transaction: Transaction):
 @app.post("/api/v1/advanced/verify", dependencies=[Depends(require_key)])
 def verify_attestation(payload: VerifyRequest):
     return {"valid": verify_decision(payload.envelope)}
+
+
+@app.post("/api/v1/ml/score", dependencies=[Depends(require_key)])
+def ml_score(transaction: Transaction):
+    """Run the independently trained model in shadow/analyst mode."""
+    model_path = os.getenv("RISK_MESH_MODEL_PATH")
+    if not model_path:
+        raise HTTPException(status_code=503, detail="No signed model configured")
+    try:
+        model = load_signed_model(model_path)
+    except (ValueError, OSError, KeyError, TypeError) as exc:
+        raise HTTPException(status_code=503, detail="Signed model unavailable or invalid") from exc
+    features = extract_features(transaction, history(transaction.tenant_id))
+    probability = model.probability(features)
+    return {
+        "transaction_id": transaction.transaction_id,
+        "model_version": model.version,
+        "fraud_probability": round(probability, 6),
+        "feature_contributions": model.explain(features),
+        "mode": "shadow",
+        "action": "analyst_review_only",
+    }
