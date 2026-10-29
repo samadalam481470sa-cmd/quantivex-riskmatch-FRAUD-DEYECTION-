@@ -3,7 +3,6 @@ from datetime import datetime, timedelta, timezone
 from riskmesh.models import Transaction
 from riskmesh.temporal import combine_risk, investigate
 
-
 BASE = datetime(2026, 10, 29, 12, tzinfo=timezone.utc)
 
 
