@@ -9,6 +9,21 @@ Quantivex RiskMesh is a Python/FastAPI fintech security platform that combines b
 
 The repository contains executable application code, automated tests, a responsive dashboard, a reproducible synthetic ML model artifact, Docker configuration, CI workflows, and a documented demonstration of fraud-pattern detection.
 
+## Live interactive showcase
+
+This repository now includes a deployable **FastAPI fraud investigation console**
+for recruiters. Unlike the earlier static dashboard illustration, it calls the
+actual Python scoring and temporal-graph detection functions. Choose from four
+fixed synthetic cases, run an investigation, inspect the risk score, explainable
+signals and timestamp-ordered fund-flow evidence.
+
+**Deployment boundary:** Vercel hosts only the read-only synthetic showcase.
+The `app.py` entrypoint disables all credential-protected transaction APIs.
+The local/container development application remains available separately.
+The project is **not independently certified or ready for real customer money**.
+
+See [Hosted demo deployment and verification](docs/HOSTED_DEMO_DEPLOYMENT.md).
+
 ## Screenshots and demonstrations
 
 ### 1. Application dashboard
