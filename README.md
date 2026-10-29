@@ -325,6 +325,12 @@ compose.yaml
 
 The goal is to explore a combination of interpretable behavioral features, time-respecting graph motifs, signed evidence, and transparent ML model provenance. This is an engineering direction, **not a verified claim that the project is unique, 100× better, or more accurate than Stripe Radar, Feedzai, Featurespace, or other commercial systems**. A credible comparison requires the same authorized labeled dataset, time-aware splits, comparable false-positive constraints, latency and throughput measurements, ablation studies, and independent review.
 
+## Deployment hardening update (restricted single-tenant mode)
+
+A new `RISK_MESH_ENV=production` guardrail mode requires a 32+-character API key, an explicitly fixed `RISK_MESH_TENANT_ID`, and a persistent database path outside `/tmp`. API requests attempting to access another tenant return 403, and the public demonstration dashboard and interactive OpenAPI docs are disabled. Duplicate transaction identifiers can no longer silently overwrite different transaction evidence.
+
+These changes are a **hardening milestone**, not a production-readiness certification. The system still lacks per-user OIDC identity, true multi-tenant RBAC, encrypted database operations, audited key management, resilient distributed storage, operational monitoring, rate limiting, incident response and representative fraud-model validation. Do **not** expose this deployment directly to the public internet or process real customer financial data.
+
 ## Remaining security and product gaps
 
 **Not yet implemented or not production-verified:** OIDC/JWT user identity and signed tenant claims; tenant-aware RBAC; hardened multi-tenant authorization; PostgreSQL with production migrations; idempotent transaction ingestion; transactional event outbox/Kafka; tamper-evident external audit logs; encryption/key rotation/KMS; production rate limiting/WAF; security monitoring; real investigator case management; source-licensed live intelligence integrations; model drift alerts; adversarial fraud testing; model fairness and regulatory validation; backup and recovery testing; independent penetration testing.
