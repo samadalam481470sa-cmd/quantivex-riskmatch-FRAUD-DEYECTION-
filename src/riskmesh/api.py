@@ -13,10 +13,12 @@ from riskmesh.attestation import sign_decision, verify_decision
 from riskmesh.engine import batch_summary, exposure_score, score_transaction
 from riskmesh.learning import extract_features, load_signed_model
 from riskmesh.models import Transaction
+from riskmesh.security import production_mode, tenant_scope, validate_runtime
 from riskmesh.store import decisions, history, save
 from riskmesh.temporal import combine_risk, investigate
 
-app = FastAPI(title="Quantivex RiskMesh", version="0.1.0")
+validate_runtime()
+app = FastAPI(title="Quantivex RiskMesh", version="0.2.0", docs_url=None if production_mode() else "/docs", redoc_url=None)
 
 
 def require_key(x_api_key: str | None = Header(default=None)) -> None:
@@ -33,11 +35,12 @@ class BatchRequest(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "mode": "synthetic-fintech-prototype"}
+    return {"status": "ok", "mode": "restricted" if production_mode() else "synthetic-fintech-prototype"}
 
 
 @app.post("/api/v1/score", dependencies=[Depends(require_key)])
 def score(transaction: Transaction):
+    tenant_scope(transaction.tenant_id)
     prior = history(transaction.tenant_id)
     result = score_transaction(transaction, prior)
     save(transaction, result)
@@ -49,6 +52,7 @@ def score_batch(payload: BatchRequest):
     results = []
     grouped: dict[str, list[Transaction]] = {}
     for transaction in payload.transactions:
+        tenant_scope(transaction.tenant_id)
         grouped.setdefault(transaction.tenant_id, history(transaction.tenant_id))
         result = score_transaction(transaction, grouped[transaction.tenant_id])
         save(transaction, result)
@@ -65,16 +69,20 @@ def recent_decisions(
     x_tenant_id: str = Header(min_length=1, max_length=64),
     limit: int = Query(default=50, ge=1, le=100),
 ):
+    tenant_scope(x_tenant_id)
     return {"decisions": decisions(x_tenant_id, limit)}
 
 
 @app.get("/api/v1/exposure/{account}", dependencies=[Depends(require_key)])
 def exposure(account: str, x_tenant_id: str = Header(min_length=1, max_length=64)):
+    tenant_scope(x_tenant_id)
     return exposure_score(history(x_tenant_id), account)
 
 
 @app.get("/", include_in_schema=False)
 def dashboard():
+    if production_mode() and os.getenv("RISK_MESH_ENABLE_DEMO", "").lower() != "true":
+        raise HTTPException(status_code=404, detail="Not found")
     return FileResponse(Path(__file__).with_name("dashboard.html"))
 
 
@@ -124,6 +132,7 @@ def ml_score(transaction: Transaction):
         model = load_signed_model(model_path)
     except (ValueError, OSError, KeyError, TypeError) as exc:
         raise HTTPException(status_code=503, detail="Signed model unavailable or invalid") from exc
+    tenant_scope(transaction.tenant_id)
     features = extract_features(transaction, history(transaction.tenant_id))
     probability = model.probability(features)
     return {
