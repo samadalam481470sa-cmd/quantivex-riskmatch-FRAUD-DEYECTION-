@@ -325,6 +325,20 @@ compose.yaml
 
 The goal is to explore a combination of interpretable behavioral features, time-respecting graph motifs, signed evidence, and transparent ML model provenance. This is an engineering direction, **not a verified claim that the project is unique, 100× better, or more accurate than Stripe Radar, Feedzai, Featurespace, or other commercial systems**. A credible comparison requires the same authorized labeled dataset, time-aware splits, comparable false-positive constraints, latency and throughput measurements, ablation studies, and independent review.
 
+## Production-hardening milestones: verified identity and observability
+
+Restricted mode now supports **RS256 OIDC JWT verification** with issuer/audience
+checks, required subject/tenant/role claims, fixed-tenant binding and
+analyst/admin authorization for API operations. The internal metrics endpoint
+requires admin access in restricted mode and emits privacy-conscious request
+counters. Response security headers and no-store caching are enabled.
+
+This is **not production-ready**: infrastructure deployment, managed identity
+provider setup, high-availability data storage, key management, penetration
+testing, and independent fraud-model validation remain outstanding. See
+[deployment security requirements](docs/DEPLOYMENT_SECURITY.md) and
+[independent validation protocol](docs/MODEL_VALIDATION.md).
+
 ## Deployment hardening update (restricted single-tenant mode)
 
 A new `RISK_MESH_ENV=production` guardrail mode requires a 32+-character API key, an explicitly fixed `RISK_MESH_TENANT_ID`, and a persistent database path outside `/tmp`. API requests attempting to access another tenant return 403, and the public demonstration dashboard and interactive OpenAPI docs are disabled. Duplicate transaction identifiers can no longer silently overwrite different transaction evidence.
