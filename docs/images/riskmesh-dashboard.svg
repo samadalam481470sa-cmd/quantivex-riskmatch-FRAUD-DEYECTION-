@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="820" viewBox="0 0 1400 820">
+<defs><linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#07111f"/><stop offset="1" stop-color="#10263a"/></linearGradient></defs>
+<rect width="1400" height="820" rx="28" fill="url(#bg)"/><rect x="34" y="30" width="1332" height="760" rx="24" fill="#0b1727" stroke="#29445f"/>
+<text x="75" y="84" fill="#68e6c4" font-family="Arial" font-size="18" font-weight="700" letter-spacing="2">QUANTIVEX / RISKMESH</text>
+<text x="75" y="128" fill="#f0f6ff" font-family="Arial" font-size="38" font-weight="700">Fintech Fraud Intelligence</text>
+<text x="75" y="160" fill="#9fb5ca" font-family="Arial" font-size="17">Behavioral anomaly detection · graph-based money flow · explainable risk decisions</text>
+<rect x="1130" y="70" width="180" height="42" rx="21" fill="#15382f" stroke="#31856e"/><text x="1220" y="97" text-anchor="middle" fill="#77e8ca" font-family="Arial" font-size="14" font-weight="700">SYNTHETIC DEMO</text>
+
+<g font-family="Arial">
+<rect x="75" y="210" width="290" height="125" rx="18" fill="#12243a" stroke="#2d4964"/><text x="103" y="245" fill="#92a9c1" font-size="14">RISK ENGINE</text><text x="103" y="302" fill="#70e2c0" font-size="40" font-weight="700">ONLINE</text>
+<rect x="390" y="210" width="290" height="125" rx="18" fill="#12243a" stroke="#2d4964"/><text x="418" y="245" fill="#92a9c1" font-size="14">GRAPH MODEL</text><text x="418" y="302" fill="#fff" font-size="40" font-weight="700">5-hop</text>
+<rect x="705" y="210" width="290" height="125" rx="18" fill="#12243a" stroke="#2d4964"/><text x="733" y="245" fill="#92a9c1" font-size="14">DECISIONS</text><text x="733" y="302" fill="#fff" font-size="40" font-weight="700">3-way</text>
+<rect x="1020" y="210" width="290" height="125" rx="18" fill="#12243a" stroke="#2d4964"/><text x="1048" y="245" fill="#92a9c1" font-size="14">TENANCY</text><text x="1048" y="302" fill="#fff" font-size="40" font-weight="700">Scoped</text>
+
+<rect x="75" y="380" width="1235" height="338" rx="18" fill="#112238" stroke="#2d4964"/>
+<text x="105" y="425" fill="#f3f7fb" font-size="23" font-weight="700">Risk signals and decision policy</text>
+<g fill="#1a334c" stroke="#3b6382"><rect x="105" y="460" width="170" height="42" rx="21"/><rect x="290" y="460" width="150" height="42" rx="21"/><rect x="455" y="460" width="135" height="42" rx="21"/><rect x="605" y="460" width="150" height="42" rx="21"/><rect x="770" y="460" width="215" height="42" rx="21"/></g>
+<g fill="#c4d4e3" font-size="14"><text x="190" y="487" text-anchor="middle">Amount outlier</text><text x="365" y="487" text-anchor="middle">High velocity</text><text x="522" y="487" text-anchor="middle">New device</text><text x="680" y="487" text-anchor="middle">Country shift</text><text x="878" y="487" text-anchor="middle">Circular money flow</text></g>
+
+<line x1="105" y1="555" x2="1275" y2="555" stroke="#2b425b"/><text x="105" y="585" fill="#8da7bf" font-size="13">DECISION</text><text x="400" y="585" fill="#8da7bf" font-size="13">RISK SCORE</text><text x="700" y="585" fill="#8da7bf" font-size="13">ANALYST ACTION</text>
+<line x1="105" y1="602" x2="1275" y2="602" stroke="#263b52"/><text x="105" y="635" fill="#70e2c0" font-size="17">ALLOW</text><text x="400" y="635" fill="#fff" font-size="17">0–34.99</text><text x="700" y="635" fill="#a8bbce" font-size="16">Continue monitoring</text>
+<text x="105" y="675" fill="#ffd17f" font-size="17">REVIEW</text><text x="400" y="675" fill="#fff" font-size="17">35–69.99</text><text x="700" y="675" fill="#a8bbce" font-size="16">Analyst investigation</text>
+</g></svg>
