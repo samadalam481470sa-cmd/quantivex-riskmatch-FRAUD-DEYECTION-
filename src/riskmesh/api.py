@@ -10,6 +10,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from riskmesh.attestation import sign_decision, verify_decision
+from riskmesh.demo import CASES, analyze
 from riskmesh.engine import batch_summary, exposure_score, score_transaction
 from riskmesh.identity import authorize
 from riskmesh.learning import extract_features, load_signed_model
@@ -107,6 +108,37 @@ def recent_decisions(
 def exposure(account: str, x_tenant_id: str = Header(min_length=1, max_length=64)):
     tenant_scope(x_tenant_id)
     return exposure_score(history(x_tenant_id), account)
+
+
+@app.get("/api/v1/demo/cases", include_in_schema=False)
+def demo_cases():
+    if production_mode():
+        raise HTTPException(status_code=404, detail="Not found")
+    return {"cases": CASES, "mode": "synthetic-read-only"}
+
+
+@app.get("/api/v1/demo/investigate/{case_id}", include_in_schema=False)
+def demo_investigate(case_id: str):
+    if production_mode():
+        raise HTTPException(status_code=404, detail="Not found")
+    try:
+        return analyze(case_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Unknown demo case") from exc
+
+
+@app.get("/assets/dashboard.css", include_in_schema=False)
+def dashboard_style():
+    if production_mode():
+        raise HTTPException(status_code=404, detail="Not found")
+    return FileResponse(Path(__file__).with_name("dashboard.css"), media_type="text/css")
+
+
+@app.get("/assets/dashboard.js", include_in_schema=False)
+def dashboard_script():
+    if production_mode():
+        raise HTTPException(status_code=404, detail="Not found")
+    return FileResponse(Path(__file__).with_name("dashboard.js"), media_type="text/javascript")
 
 
 @app.get("/", include_in_schema=False)
