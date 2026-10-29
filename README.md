@@ -9,6 +9,34 @@ Quantivex RiskMesh is a Python/FastAPI fintech security platform that combines b
 
 The repository contains executable application code, automated tests, a responsive dashboard, a reproducible synthetic ML model artifact, Docker configuration, CI workflows, and a documented demonstration of fraud-pattern detection.
 
+## Live public recruiter showcase
+
+**[Launch Quantivex RiskMesh → https://quantivex-riskmesh-demo.vercel.app/](https://quantivex-riskmesh-demo.vercel.app/)**
+
+Vercel reports the public synthetic-only FastAPI deployment as **READY**, built
+from GitHub release commit `27d54276e27f7c8fd364bec3c798dd83aa15d4e9`.
+The web dashboard provides four selectable, fixed synthetic investigations
+using the actual Python behavior and temporal-graph scoring implementations.
+
+- [Dashboard](https://quantivex-riskmesh-demo.vercel.app/)
+- [Health check](https://quantivex-riskmesh-demo.vercel.app/health)
+- [Synthetic case catalog](https://quantivex-riskmesh-demo.vercel.app/api/v1/demo/cases)
+- [Circular-flow detection JSON](https://quantivex-riskmesh-demo.vercel.app/api/v1/demo/investigate/circular-ring)
+
+**Safety / operational boundary:** this is a publicly accessible *read-only
+synthetic demonstration*, not the protected financial transaction backend.
+The Vercel entrypoint sets `RISK_MESH_PUBLIC_DEMO=true` and rejects
+credential-protected financial API operations. SQLite transaction persistence,
+OIDC private-tenant integrations and real transaction scoring are not hosted
+in this serverless demo. Vercel reports the deployment as ready, and local
+GitHub CI validates the real code paths, but an independent production HTTP
+acceptance probe was not available to the deployment agent.
+
+**Release update workflow:** the deployment was uploaded from the exact
+committed repository source; it is **not automatically Git-linked**. Further
+commits require a new deployment until a Git integration is authorized and
+connected. See [hosted deployment guide](docs/HOSTED_DEMO_DEPLOYMENT.md).
+
 ## Live interactive showcase
 
 This repository now includes a deployable **FastAPI fraud investigation console**
