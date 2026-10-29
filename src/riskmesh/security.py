@@ -65,3 +65,34 @@ async def authenticated_tenant(request: Request) -> str:
     if not reserve_nonce(tenant, nonce, now):
         raise HTTPException(status_code=409, detail="Replay detected")
     return tenant
+
+
+TENANT_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
+
+
+def production_mode() -> bool:
+    return os.getenv("RISK_MESH_ENV", "development").lower() == "production"
+
+
+def tenant_scope(requested: str) -> str:
+    if not production_mode():
+        return requested
+    configured = os.getenv("RISK_MESH_TENANT_ID", "")
+    if not TENANT_RE.fullmatch(configured):
+        raise HTTPException(status_code=503, detail="Tenant authorization is not configured")
+    if requested != configured:
+        raise HTTPException(status_code=403, detail="Tenant access denied")
+    return configured
+
+
+def validate_runtime() -> None:
+    if not production_mode():
+        return
+    key = os.getenv("RISK_MESH_API_KEY", "")
+    tenant = os.getenv("RISK_MESH_TENANT_ID", "")
+    if len(key) < 32 or not TENANT_RE.fullmatch(tenant):
+        raise RuntimeError("Restricted mode requires a 32+ character API key and fixed tenant")
+    if os.getenv("RISK_MESH_DB_PATH", "/tmp/riskmesh.db").startswith("/tmp/"):
+        raise RuntimeError("Restricted mode requires persistent storage outside /tmp")
+    if os.getenv("RISK_MESH_ENABLE_DEMO", "false").lower() == "true":
+        raise RuntimeError("Restricted mode cannot expose the demo dashboard")
