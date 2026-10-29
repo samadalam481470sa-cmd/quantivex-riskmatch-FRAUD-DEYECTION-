@@ -11,6 +11,23 @@ The project is designed to demonstrate fintech engineering, fraud analytics, gra
 
 ![Quantivex RiskMesh architecture](docs/images/riskmesh-architecture.svg)
 
+## Trainable machine learning and threat intelligence
+
+The ML pipeline implements a real **regularized logistic classifier trained by batch gradient descent** with seven time-safe behavioral/graph features. Training uses a chronological holdout (not a random split) to reduce future-data leakage. Evaluation reports precision, recall, false-positive rate, confusion matrix and Brier score; model artifacts are authenticated with HMAC-SHA256 rather than loaded through unsafe Python pickle.
+
+**Mathematical model:**
+
+- Normalized features: \(z_j=(x_j-\\mu_j)/\\sigma_j\).
+- Fraud probability: \(P(y=1\\mid x)=1/(1+e^{-(b+\\sum_j w_j z_j)})\).
+- Objective: binary cross-entropy plus L2 regularization, optimized by gradient descent.
+- Brier calibration diagnostic: \(BS=(1/N)\\sum_i(p_i-y_i)^2\).
+
+Use `scripts/train_model.py` with **independently labeled, authorized local JSONL transactions**. Configure `RISK_MESH_MODEL_KEY` (32+ characters) and `RISK_MESH_MODEL_PATH` to enable `POST /api/v1/ml/score`. ML scoring is explicitly **shadow/analyst mode** and does not autonomously block payments.
+
+A separate `intelligence.py` module normalizes public IP/domain threat indicators from JSON feeds. Its fetcher only permits explicitly approved HTTPS hostnames via `RISK_MESH_FEED_HOSTS`, disables redirects and proxies, and caps response size. This is an opt-in feed ingestion library, **not a crawler for private systems**. Production requires hardened DNS/egress controls and source licensing checks.
+
+**Competitor research:** publicly documented Stripe Radar emphasizes network-wide learned representations and precision/recall tradeoffs; Feedzai emphasizes cross-channel analytics and model operations; Featurespace documents adaptive behavioral analytics. This project explores an explainable, time-respecting graph + auditable-model alternative; it does not reproduce proprietary competitor code, claim superior benchmarks, or access their private systems.
+
 ## Advanced security and graph intelligence
 
 The advanced engine combines **time-respecting graph traversal** with detection of circular funding, aggregation/layering and rapid dispersal. It applies nonlinear risk fusion to reduce naive double-counting of correlated signals. Every advanced investigation returns a **canonical HMAC-SHA256 signed decision envelope** that can be independently verified against tampering.
