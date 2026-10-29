@@ -123,6 +123,7 @@ def graph_signal(transaction: Transaction, history: list[Transaction]) -> tuple[
 
 
 def score_transaction(transaction: Transaction, history: list[Transaction]) -> RiskResult:
+    history = [item for item in history if item.tenant_id == transaction.tenant_id]
     if len(history) > 20_000:
         raise ValueError("History batch exceeds 20,000 transactions")
     signals: list[RiskSignal] = []
