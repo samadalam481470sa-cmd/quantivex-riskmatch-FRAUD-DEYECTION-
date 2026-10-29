@@ -4,7 +4,6 @@ from __future__ import annotations
 import threading
 from collections import Counter
 
-from fastapi import Request
 from fastapi.responses import PlainTextResponse
 
 _lock = threading.Lock()
