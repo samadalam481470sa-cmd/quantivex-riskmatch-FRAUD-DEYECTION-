@@ -9,9 +9,11 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
+from riskmesh.attestation import sign_decision, verify_decision
 from riskmesh.engine import batch_summary, exposure_score, score_transaction
 from riskmesh.models import Transaction
 from riskmesh.store import decisions, history, save
+from riskmesh.temporal import combine_risk, investigate
 
 app = FastAPI(title="Quantivex RiskMesh", version="0.1.0")
 
@@ -73,3 +75,39 @@ def exposure(account: str, x_tenant_id: str = Header(min_length=1, max_length=64
 @app.get("/", include_in_schema=False)
 def dashboard():
     return FileResponse(Path(__file__).with_name("dashboard.html"))
+
+
+class VerifyRequest(BaseModel):
+    envelope: dict
+
+
+@app.post("/api/v1/advanced/investigate", dependencies=[Depends(require_key)])
+def advanced_investigate(transaction: Transaction):
+    """Run temporal motifs and return a cryptographically attested risk explanation."""
+    prior = history(transaction.tenant_id)
+    baseline = score_transaction(transaction, prior)
+    motifs = investigate(transaction, prior)
+    fused_score = combine_risk(baseline.risk_score, motifs)
+    decision = "block" if fused_score >= 70 else "review" if fused_score >= 35 else "allow"
+    report = {
+        "tenant_id": transaction.tenant_id,
+        "transaction_id": transaction.transaction_id,
+        "base_risk_score": baseline.risk_score,
+        "risk_score": fused_score,
+        "decision": decision,
+        "behavioral_signals": [signal.model_dump() for signal in baseline.signals],
+        "temporal_graph_findings": [finding.as_dict() for finding in motifs],
+        "model_version": "temporal-graph-v1",
+    }
+    try:
+        envelope = sign_decision(report)
+    except ValueError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    # Save only after successful scoring and attestation.
+    save(transaction, baseline.model_copy(update={"risk_score": fused_score, "decision": decision}))
+    return envelope
+
+
+@app.post("/api/v1/advanced/verify", dependencies=[Depends(require_key)])
+def verify_attestation(payload: VerifyRequest):
+    return {"valid": verify_decision(payload.envelope)}
