@@ -345,6 +345,16 @@ A new `RISK_MESH_ENV=production` guardrail mode requires a 32+-character API key
 
 These changes are a **hardening milestone**, not a production-readiness certification. The system still lacks per-user OIDC identity, true multi-tenant RBAC, encrypted database operations, audited key management, resilient distributed storage, operational monitoring, rate limiting, incident response and representative fraud-model validation. Do **not** expose this deployment directly to the public internet or process real customer financial data.
 
+## Restricted deployment and independent model evaluation (new)
+
+- [Restricted single-node Compose reference](ops/compose.restricted.yml): nonroot, read-only root, resource caps, localhost binding, persistent data volume and health check. **This is not high availability.** Provision volume ownership, encryption and a TLS gateway externally.
+- [Prometheus alert rules](ops/prometheus/alerts.yml): server error rate and absent metrics, to be installed into an independently managed monitoring stack.
+- [Operations and disaster-recovery runbook](docs/OPERATIONS_RUNBOOK.md): identity provisioning, secret handling, backup/restore procedure and release gates.
+- [Frozen-model temporal holdout evaluator](src/riskmesh/validation.py) and [CLI](scripts/evaluate_holdout.py): evaluate signed model artifacts on independently labeled holdout data, rejecting duplicate IDs and temporal overlap. No external real-world dataset is included or validated.
+- [Model validation protocol](docs/MODEL_VALIDATION.md): independent review, calibration, false-positive constraints and adversarial testing.
+
+**These are implemented tools and reference configuration, not evidence of a deployed or certified production service.**
+
 ## Remaining security and product gaps
 
 **Not yet implemented or not production-verified:** OIDC/JWT user identity and signed tenant claims; tenant-aware RBAC; hardened multi-tenant authorization; PostgreSQL with production migrations; idempotent transaction ingestion; transactional event outbox/Kafka; tamper-evident external audit logs; encryption/key rotation/KMS; production rate limiting/WAF; security monitoring; real investigator case management; source-licensed live intelligence integrations; model drift alerts; adversarial fraud testing; model fairness and regulatory validation; backup and recovery testing; independent penetration testing.
