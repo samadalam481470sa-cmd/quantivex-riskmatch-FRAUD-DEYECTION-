@@ -3,27 +3,37 @@
 **Current state: NOT independently validated.** The checked-in synthetic model
 demonstrates software correctness, not real fraud recall, precision or fairness.
 
-1. Obtain a lawful, documented, consent-appropriate labeled dataset with
-   provenance, label delay, missingness, class prevalence and jurisdiction.
-2. Freeze a holdout period **after** training and model selection; isolate
-   entities and avoid leakage from future graph edges, chargeback outcomes,
-   investigation results, or label-dependent features.
-3. Appoint an evaluator separate from model development and pre-register
-   decision thresholds and false-positive constraints.
-4. Compare against rule-only baseline, graph-only model, logistic ML-only
-   model, and the combined approach on identical holdout records.
-5. Report PR-AUC, ROC-AUC, precision, recall, FPR, FNR, confusion matrix,
-   Brier score, calibration curves, confidence intervals, and throughput/
-   p95/p99 latency at each threshold. Report prevalence and class counts.
-6. Slice results by payment channel, amount band, customer tenure,
-   country/region, device novelty and other legally appropriate cohorts;
-   investigate unequal error rates without using protected traits for
-   adverse decisions.
-7. Simulate delayed labels, concept drift, adversarial account rings,
-   micro-transaction fraud, benign high-velocity transfers, data poisoning,
-   replayed requests, and coordinated graph attacks.
-8. Require analyst review, rollback procedures, incident playbooks and
-   monitored shadow deployment before considering automated enforcement.
+A **frozen-model temporal holdout evaluator** is implemented in
+`src/riskmesh/validation.py` and `scripts/evaluate_holdout.py`.
+It rejects duplicate transaction IDs, overlap with the supplied training
+cutoff, missing class diversity and insufficient samples; it reports a
+Wilson 95% interval for recall in addition to confusion-matrix metrics.
 
-**Acceptance is not established by the synthetic 100% precision/recall demo.**
-No independent validation or external benchmark is claimed.
+```bash
+RISK_MESH_MODEL_KEY="your-private-model-key" \
+  python scripts/evaluate_holdout.py model.json independent_holdout.jsonl 2026-05-01T00:00:00Z
+```
+
+Holdout JSONL lines have the form
+`{"transaction": { ... Transaction fields ... }, "fraud_label": 0}`
+(or `fraud_label: 1`). **Use only lawfully acquired, independently labeled
+records.** No real-world dataset is bundled. The evaluator begins with an
+empty history, so it does not currently incorporate pre-cutoff history and
+cannot substitute for a full feature-store replay.
+
+Required independent assessment:
+
+1. Freeze the model and decision thresholds *before* opening the holdout.
+2. Record data provenance, delayed labels, class prevalence, missingness,
+   and exact split boundaries.
+3. Assign an independent reviewer who did not select the model parameters.
+4. Compare rules-only, graph-only, ML-only and combined systems on identical
+   authorized records, at fixed false-positive constraints.
+5. Report PR-AUC, ROC-AUC, precision, recall, FPR, FNR, calibration,
+   confidence intervals, p95/p99 latency, drift and operational costs.
+6. Assess benign high velocity, coordinated microfraud, account rings,
+   false-positive harm, evasion and data poisoning.
+7. Run a monitored shadow deployment, document incident/rollback processes
+   and obtain required privacy and regulatory signoffs.
+
+**Synthetic 100% precision/recall is not real-world validation.**
